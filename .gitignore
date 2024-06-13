@@ -1,0 +1,45 @@
+# Ignore binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Ignore test binary, built with `go test -c`
+*.test
+
+# Ignore output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Ignore dependency folder
+# vendor/
+
+# Ignore all '*.env' files in any folder levels
+**.env
+
+# Keep folder named 'bin' in any folder levels that has file named .gitkeep
+**/bin/*
+!**/bin/.gitkeep 
+
+# Keep folder named 'log' in any folder levels that has file named .gitkeep
+**/log/*
+!**/log/.gitkeep 
+!**/log/*.go
+
+# Ignore all '*.log' files in any folder levels
+**.log
+
+# Ignore mac-os related file
+.DS_Store
+
+# Ignore visual-code editor related file
+.vscode
+
+# Ignore hot-reload tool config file
+**.toml
+
+# Ignore tmp folder
+tmp/
+
+# Vendor
+vendor/
