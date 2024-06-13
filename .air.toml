@@ -1,0 +1,9 @@
+root = "."  # The root directory of your project
+
+[build]
+  # Build command for compiling your Go application
+  cmd = "go build -o tmp/main.exe cmd/main.go"
+
+[run]
+  # Run command for starting your compiled application
+  cmd ="go run tmp/main"

@@ -35,8 +35,8 @@
 # Ignore visual-code editor related file
 .vscode
 
-# Ignore hot-reload tool config file
-**.toml
+# # Ignore hot-reload tool config file
+# **.toml
 
 # Ignore tmp folder
 tmp/

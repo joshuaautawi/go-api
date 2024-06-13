@@ -3,6 +3,7 @@
 all: build
 
 build:
+	go build -o bin/main.exe cmd/main.go
 	go build -o bin/main cmd/main.go
 
 run:
