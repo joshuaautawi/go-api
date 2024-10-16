@@ -42,4 +42,5 @@ func ConnectPostgres() {
 	DB = Dbinstance{
 		Db: db,
 	}
+
 }
