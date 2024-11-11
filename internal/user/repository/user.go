@@ -5,6 +5,7 @@ import (
 
 	"github.com/joshuaautawi/go-api/internal/user/dto"
 	"github.com/joshuaautawi/go-api/internal/user/models"
+	"github.com/joshuaautawi/go-api/internal/utils"
 	"github.com/joshuaautawi/go-api/pkg/db/postgres"
 )
 
@@ -25,6 +26,14 @@ func GetOneByID(req dto.GetOneByIDRequest) (*models.User, error) {
 }
 
 func Create(user *dto.CreateOne) (*models.User, error) {
+	hashedPassword, err := utils.HashPassword(user.Password)
+	if err != nil {
+		log.Println("Error hashing password:", err)
+		return nil, err
+	}
+
+	// Set the password to the hashed version
+	user.Password = hashedPassword
 	newUser := models.User{
 		Username: user.Username,
 		Password: user.Password,
