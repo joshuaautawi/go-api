@@ -6,12 +6,12 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/joshuaautawi/go-api/cmd/app/routers"
 	"github.com/joshuaautawi/go-api/configs"
-	"github.com/joshuaautawi/go-api/databases"
+	"github.com/joshuaautawi/go-api/pkg/db/postgres"
 	_ "github.com/lib/pq"
 )
 
 func main() {
-	databases.ConnectPostgres()
+	postgres.ConnectPostgres()
 	app := fiber.New()
 	app.Use(logger.New())
 	app.Use(cors.New())

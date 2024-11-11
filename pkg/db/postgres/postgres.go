@@ -1,4 +1,4 @@
-package databases
+package postgres
 
 import (
 	"fmt"
@@ -6,8 +6,8 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/joshuaautawi/go-api/cmd/app/models"
 	"github.com/joshuaautawi/go-api/configs"
+	"github.com/joshuaautawi/go-api/pkg/db/utils"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -38,7 +38,7 @@ func ConnectPostgres() {
 	log.Println("Connected")
 	db.Logger = logger.Default.LogMode(logger.Info)
 	log.Println("running migrations")
-	db.AutoMigrate(&models.User{})
+	utils.MigrateModels(db)
 	DB = Dbinstance{
 		Db: db,
 	}

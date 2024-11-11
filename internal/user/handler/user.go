@@ -2,15 +2,14 @@ package handler
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
-	model "github.com/joshuaautawi/go-api/cmd/app/models"
-	"github.com/joshuaautawi/go-api/databases"
+	"github.com/joshuaautawi/go-api/internal/user/models"
+	"github.com/joshuaautawi/go-api/pkg/db/postgres"
 )
 
 // Create a user
 func CreateUser(c *fiber.Ctx) error {
-	db := databases.DB.Db
-	user := new(model.User)
+	db := postgres.DB.Db
+	user := new(models.User)
 	// Store the body in the user and return error if encountered
 	err := c.BodyParser(user)
 	if err != nil {
@@ -27,8 +26,8 @@ func CreateUser(c *fiber.Ctx) error {
 
 // Get All Users from db
 func GetAllUsers(c *fiber.Ctx) error {
-	db := databases.DB.Db
-	var users []model.User
+	db := postgres.DB.Db
+	var users []models.User
 	// find all users in the database
 	db.Find(&users)
 	// If no user found, return an error
@@ -41,13 +40,13 @@ func GetAllUsers(c *fiber.Ctx) error {
 
 // GetSingleUser from db
 func GetSingleUser(c *fiber.Ctx) error {
-	db := databases.DB.Db
+	db := postgres.DB.Db
 	// get id params
 	id := c.Params("id")
-	var user model.User
+	var user models.User
 	// find single user in the database by id
-	db.Find(&user, "id = ?", id)
-	if user.ID == uuid.Nil {
+	result := db.Find(&user, "id = ?", id)
+	if result.Error != nil {
 		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "User not found", "data": nil})
 	}
 	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "User Found", "data": user})
@@ -58,13 +57,14 @@ func UpdateUser(c *fiber.Ctx) error {
 	type updateUser struct {
 		Username string `json:"username"`
 	}
-	db := databases.DB.Db
-	var user model.User
+	db := postgres.DB.Db
+	var user models.User
 	// get id params
 	id := c.Params("id")
 	// find single user in the database by id
-	db.Find(&user, "id = ?", id)
-	if user.ID == uuid.Nil {
+	result := db.Find(&user, "id = ?", id)
+
+	if result.Error != nil {
 		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "User not found", "data": nil})
 	}
 	var updateUserData updateUser
@@ -81,13 +81,13 @@ func UpdateUser(c *fiber.Ctx) error {
 
 // delete user in db by ID
 func DeleteUserByID(c *fiber.Ctx) error {
-	db := databases.DB.Db
-	var user model.User
+	db := postgres.DB.Db
+	var user models.User
 	// get id params
 	id := c.Params("id")
 	// find single user in the database by id
-	db.Find(&user, "id = ?", id)
-	if user.ID == uuid.Nil {
+	result := db.Find(&user, "id = ?", id)
+	if result.Error != nil {
 		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "User not found", "data": nil})
 	}
 	err := db.Delete(&user, "id = ?", id).Error

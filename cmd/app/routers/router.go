@@ -2,14 +2,16 @@ package routers
 
 import (
 	"github.com/gofiber/fiber/v2"
-	handler "github.com/joshuaautawi/go-api/cmd/app/handlers"
+	"github.com/joshuaautawi/go-api/internal/user/handler"
 )
+
+var userPath = "/users"
 
 // SetupRoutes func
 func SetupRoutes(app *fiber.App) {
 	// grouping
 	api := app.Group("/api")
-	v1 := api.Group("/users")
+	v1 := api.Group(userPath)
 
 	v1.Get("/", handler.GetAllUsers)
 	v1.Get("/:id", handler.GetSingleUser)
