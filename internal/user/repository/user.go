@@ -1,6 +1,9 @@
 package repository
 
 import (
+	"log"
+
+	"github.com/joshuaautawi/go-api/internal/user/dto"
 	"github.com/joshuaautawi/go-api/internal/user/models"
 	"github.com/joshuaautawi/go-api/pkg/db/postgres"
 )
@@ -12,9 +15,24 @@ func GetAll() models.Users {
 	return users
 }
 
-func GetOneByID() models.User {
+func GetOneByID(req dto.GetOneByIDRequest) (*models.User, error) {
 	var user models.User
-	db := postgres.DB.Db
-	db.Find(&user)
-	return user
+	if err := postgres.DB.Db.First(&user, "id = ?", req.ID).Error; err != nil {
+		log.Println("Error fetching user by ID:", err)
+		return nil, err
+	}
+	return &user, nil
+}
+
+func Create(user *dto.CreateOne) (*models.User, error) {
+	newUser := models.User{
+		Username: user.Username,
+		Password: user.Password,
+		Email:    user.Email,
+	}
+	if err := postgres.DB.Db.Create(&newUser).Error; err != nil {
+		log.Println("Error creating user:", err)
+		return nil, err
+	}
+	return &newUser, nil
 }

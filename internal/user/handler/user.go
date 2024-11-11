@@ -2,20 +2,22 @@ package handler
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/joshuaautawi/go-api/internal/user/dto"
 	"github.com/joshuaautawi/go-api/internal/user/models"
+	"github.com/joshuaautawi/go-api/internal/user/service"
 	"github.com/joshuaautawi/go-api/pkg/db/postgres"
 )
 
 // Create a user
 func CreateUser(c *fiber.Ctx) error {
-	db := postgres.DB.Db
-	user := new(models.User)
+	req := new(dto.CreateOne)
 	// Store the body in the user and return error if encountered
-	err := c.BodyParser(user)
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Something's wrong with your input", "data": err})
+	errParser := c.BodyParser(req)
+	if errParser != nil {
+		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Something's wrong with your input", "data": errParser})
 	}
-	err = db.Create(&user).Error
+	user, err := service.CreateOne(req)
+
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Could not create user", "data": err})
 	}
