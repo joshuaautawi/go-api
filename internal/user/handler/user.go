@@ -2,6 +2,7 @@ package handler
 
 import (
 	"github.com/gofiber/fiber/v2"
+	baseDTO "github.com/joshuaautawi/go-api/internal/common/dto"
 	"github.com/joshuaautawi/go-api/internal/user/dto"
 	"github.com/joshuaautawi/go-api/internal/user/models"
 	"github.com/joshuaautawi/go-api/internal/user/service"
@@ -28,16 +29,19 @@ func CreateUser(c *fiber.Ctx) error {
 
 // Get All Users from db
 func GetAllUsers(c *fiber.Ctx) error {
-	db := postgres.DB.Db
-	var users []models.User
-	// find all users in the database
-	db.Find(&users)
-	// If no user found, return an error
-	if len(users) == 0 {
-		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Users not found", "data": nil})
+	input := new(baseDTO.GetAllRequest)
+	errParser := c.QueryParser(input)
+	if errParser != nil {
+		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Something's wrong with your input", "data": errParser})
 	}
-	// return users
-	return c.Status(200).JSON(fiber.Map{"status": "sucess", "message": "Users Found", "data": users})
+	users, err := service.GetAll(input)
+
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Could not get user", "data": err})
+	}
+	// Return the created user
+	return c.Status(201).JSON(fiber.Map{"status": "success", "data": users})
+
 }
 
 // GetSingleUser from db

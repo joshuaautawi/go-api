@@ -5,7 +5,6 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/joshuaautawi/go-api/cmd/app/routers"
-	"github.com/joshuaautawi/go-api/configs"
 	"github.com/joshuaautawi/go-api/pkg/db/postgres"
 	_ "github.com/lib/pq"
 )
@@ -20,6 +19,6 @@ func main() {
 	app.Use(func(c *fiber.Ctx) error {
 		return c.SendStatus(404) // => 404 "Not Found"
 	})
-	port := configs.Config("PORT")
+	port := "6969"
 	app.Listen(":" + port)
 }
