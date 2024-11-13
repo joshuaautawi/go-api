@@ -5,8 +5,8 @@ type (
 		ID int
 	}
 	CreateOne struct {
-		Username string
-		Email    string
-		Password string
+		Username string `json:"username" validate:"required"`
+		Email    string `json:"email" validate:"required,email"`
+		Password string `json:"password" validate:"required,min=6"`
 	}
 )

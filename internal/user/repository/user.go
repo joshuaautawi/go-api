@@ -10,28 +10,30 @@ import (
 	"github.com/joshuaautawi/go-api/pkg/db/postgres"
 )
 
-func GetAll(input *baseDTO.GetAllRequest) (*baseDTO.GetAllBaseResponse[[]models.User], error) {
-	var users []models.User
-	db := postgres.DB.Db
+func GetAll(input *baseDTO.GetAllRequest) (*[]models.User, *baseDTO.Meta, *baseDTO.Error) {
 	var totalCount int64
-	if err := db.Model(&models.User{}).Count(&totalCount).Error; err != nil {
-		return nil, err
-	}
-
-	result := db.Limit(input.Limit).Offset((input.Page - input.Limit) * input.Limit).Find(&users)
-	if result.Error != nil {
-		return nil, result.Error
-	}
-
+	var users []models.User
 	meta := baseDTO.Meta{
-		TotalCount: 1,
+		TotalCount: 0,
 		Page:       input.Page,
 		Limit:      input.Limit,
 	}
-	return &baseDTO.GetAllBaseResponse[[]models.User]{
-		Data: users,
-		Meta: &meta,
-	}, nil
+	db := postgres.DB.Db
+
+	if err := db.Model(&models.User{}).Count(&totalCount).Error; err != nil {
+		err := utils.FetchDBError(err.Error())
+		return nil, &meta, &err
+	}
+
+	meta.TotalCount = totalCount
+
+	result := db.Limit(input.Limit).Offset((input.Page - input.Limit) * input.Limit).Find(&users)
+	if result.Error != nil {
+		err := utils.FetchDBError(result.Error.Error())
+		return nil, &meta, &err
+	}
+
+	return &users, &meta, nil
 }
 
 func GetOneByID(req dto.GetOneByIDRequest) (*models.User, error) {
@@ -43,11 +45,11 @@ func GetOneByID(req dto.GetOneByIDRequest) (*models.User, error) {
 	return &user, nil
 }
 
-func Create(user *dto.CreateOne) (*models.User, error) {
-	hashedPassword, err := utils.HashPassword(user.Password)
-	if err != nil {
-		log.Println("Error hashing password:", err)
-		return nil, err
+func Create(user *dto.CreateOne) (*models.User, *baseDTO.Error) {
+	hashedPassword, errHash := utils.HashPassword(user.Password)
+	if errHash != nil {
+		err := utils.HashError(errHash.Error())
+		return nil, &err
 	}
 
 	// Set the password to the hashed version
@@ -57,9 +59,10 @@ func Create(user *dto.CreateOne) (*models.User, error) {
 		Password: user.Password,
 		Email:    user.Email,
 	}
-	if err := postgres.DB.Db.Create(&newUser).Error; err != nil {
-		log.Println("Error creating user:", err)
-		return nil, err
+
+	if errFetch := postgres.DB.Db.Create(&newUser).Error; errFetch != nil {
+		err := utils.FetchDBError(errFetch.Error())
+		return nil, &err
 	}
 	return &newUser, nil
 }

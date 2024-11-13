@@ -8,16 +8,9 @@ type (
 		Error  *Error `json:"error,omitempty"`
 	}
 	Error struct {
-		Code         string `json:"code"`
+		Code         int    `json:"code"`
 		Message      string `json:"message"`
 		InternalCode string `json:"internalCode"`
-	}
-	GetOneById struct {
-		ID int
-	}
-	GetAllRequest struct {
-		Page  int
-		Limit int
 	}
 	Meta struct {
 		TotalCount int64 `json:"totalCount,omitempty"`
@@ -25,8 +18,11 @@ type (
 		Limit      int   `json:"limit,omitempty"`
 	}
 
-	GetAllBaseResponse[T any] struct {
-		Data T     `json:"data,omitempty"`
-		Meta *Meta `json:"meta,omitempty"`
+	GetOneByIdRequest struct {
+		ID int `json:"id" validate:"required"`
+	}
+	GetAllRequest struct {
+		Page  int `json:"page" validate:"required"`
+		Limit int `json:"limit" validate:"required"`
 	}
 )

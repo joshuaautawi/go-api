@@ -7,12 +7,12 @@ import (
 	"github.com/joshuaautawi/go-api/internal/user/repository"
 )
 
-func CreateOne(req *dto.CreateOne) (*models.User, error) {
+func CreateOne(req *dto.CreateOne) (*models.User, *baseDTO.Error) {
 	user, err := repository.Create(req)
 	return user, err
 }
 
-func GetAll(input *baseDTO.GetAllRequest) (*baseDTO.GetAllBaseResponse[[]models.User], error) {
-	users, err := repository.GetAll(input)
-	return users, err
+func GetAll(input *baseDTO.GetAllRequest) (*[]models.User, *baseDTO.Meta, *baseDTO.Error) {
+	users, meta, err := repository.GetAll(input)
+	return users, meta, err
 }

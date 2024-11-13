@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/gofiber/fiber/v2"
 	baseDTO "github.com/joshuaautawi/go-api/internal/common/dto"
+	"github.com/joshuaautawi/go-api/internal/common/utils"
 	"github.com/joshuaautawi/go-api/internal/user/dto"
 	"github.com/joshuaautawi/go-api/internal/user/models"
 	"github.com/joshuaautawi/go-api/internal/user/service"
@@ -12,35 +13,49 @@ import (
 // Create a user
 func CreateUser(c *fiber.Ctx) error {
 	req := new(dto.CreateOne)
-	// Store the body in the user and return error if encountered
-	errParser := c.BodyParser(req)
-	if errParser != nil {
-		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Something's wrong with your input", "data": errParser})
+	res := baseDTO.Response[*models.User]{}
+
+	if err := c.BodyParser(req); err != nil {
+		err := utils.ParseError(err.Error())
+		return utils.HandleErrorResponse(c, &err, &res)
 	}
+
+	if err := utils.HandleValidation(req); err != nil {
+		return utils.HandleErrorResponse(c, err, &res)
+	}
+
 	user, err := service.CreateOne(req)
 
 	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Could not create user", "data": err})
+		return utils.HandleErrorResponse(c, err, &res)
 	}
-	// Return the created user
-	return c.Status(201).JSON(fiber.Map{"status": "success", "message": "User has created", "data": user})
+	res.Data = user
+	return c.Status(fiber.StatusCreated).JSON(res)
 
 }
 
 // Get All Users from db
 func GetAllUsers(c *fiber.Ctx) error {
-	input := new(baseDTO.GetAllRequest)
-	errParser := c.QueryParser(input)
+	req := new(baseDTO.GetAllRequest)
+	errParser := c.QueryParser(req)
+	res := baseDTO.Response[*[]models.User]{}
+
 	if errParser != nil {
-		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Something's wrong with your input", "data": errParser})
+		err := utils.ParseError(errParser.Error())
+		return utils.HandleErrorResponse(c, &err, &res)
 	}
-	users, err := service.GetAll(input)
+	if err := utils.HandleValidation(req); err != nil {
+		return utils.HandleErrorResponse(c, err, &res)
+	}
+	users, meta, err := service.GetAll(req)
 
 	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Could not get user", "data": err})
+		return utils.HandleErrorResponse(c, err, &res)
 	}
+	res.Data = users
+	res.Meta = meta
 	// Return the created user
-	return c.Status(201).JSON(fiber.Map{"status": "success", "data": users})
+	return c.Status(fiber.StatusOK).JSON(res)
 
 }
 
@@ -55,7 +70,7 @@ func GetSingleUser(c *fiber.Ctx) error {
 	if result.Error != nil {
 		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "User not found", "data": nil})
 	}
-	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "User Found", "data": user})
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"status": "success", "message": "User Found", "data": user})
 }
 
 // update a user in db
