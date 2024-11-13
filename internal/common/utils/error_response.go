@@ -24,3 +24,8 @@ func ValidationError(message string) dto.Error {
 	err := dto.Error{Code: fiber.StatusBadRequest, InternalCode: "10002", Message: message}
 	return err
 }
+
+func WrongPasswordError() dto.Error {
+	err := dto.Error{Code: fiber.StatusForbidden, InternalCode: "10002", Message: "wrong password"}
+	return err
+}
