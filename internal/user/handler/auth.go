@@ -5,13 +5,12 @@ import (
 	baseDTO "github.com/joshuaautawi/go-api/internal/common/dto"
 	"github.com/joshuaautawi/go-api/internal/common/utils"
 	"github.com/joshuaautawi/go-api/internal/user/dto"
-	"github.com/joshuaautawi/go-api/internal/user/models"
 	"github.com/joshuaautawi/go-api/internal/user/service"
 )
 
 func Login(c *fiber.Ctx) error {
 	req := new(dto.LoginRequest)
-	res := baseDTO.Response[*models.User]{}
+	res := baseDTO.Response[string]{}
 
 	if err := c.BodyParser(req); err != nil {
 		err := utils.ParseError(err.Error())
@@ -20,10 +19,10 @@ func Login(c *fiber.Ctx) error {
 	if err := utils.HandleValidation(req); err != nil {
 		return utils.HandleErrorResponse(c, err, &res)
 	}
-	user, err := service.Login(req)
+	token, err := service.Login(req)
 	if err != nil {
 		return utils.HandleErrorResponse(c, err, &res)
 	}
-	res.Data = user
+	res.Data = token
 	return c.Status(fiber.StatusOK).JSON(res)
 }

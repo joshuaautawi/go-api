@@ -1,18 +1,19 @@
 package handler
 
 import (
+	"strconv"
+
 	"github.com/gofiber/fiber/v2"
 	baseDTO "github.com/joshuaautawi/go-api/internal/common/dto"
 	"github.com/joshuaautawi/go-api/internal/common/utils"
 	"github.com/joshuaautawi/go-api/internal/user/dto"
 	"github.com/joshuaautawi/go-api/internal/user/models"
 	"github.com/joshuaautawi/go-api/internal/user/service"
-	"github.com/joshuaautawi/go-api/pkg/db/postgres"
 )
 
 // Create a user
 func CreateUser(c *fiber.Ctx) error {
-	req := new(dto.CreateOne)
+	req := new(dto.CreateOneRequest)
 	res := baseDTO.Response[*models.User]{}
 
 	if err := c.BodyParser(req); err != nil {
@@ -59,61 +60,60 @@ func GetAllUsers(c *fiber.Ctx) error {
 
 }
 
-// GetSingleUser from db
-func GetSingleUser(c *fiber.Ctx) error {
-	db := postgres.DB.Db
-	// get id params
-	id := c.Params("id")
-	var user models.User
-	// find single user in the database by id
-	result := db.Find(&user, "id = ?", id)
-	if result.Error != nil {
-		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "User not found", "data": nil})
+// GetOne from db
+func GetOne(c *fiber.Ctx) error {
+	idStr := c.Params("id")
+	id, convErr := strconv.Atoi(idStr)
+	res := baseDTO.Response[*models.User]{}
+	if convErr != nil {
+		err := utils.ParseError(convErr.Error())
+		return utils.HandleErrorResponse(c, &err, &res)
 	}
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{"status": "success", "message": "User Found", "data": user})
+	user, err := service.GetOne(id)
+	if err != nil {
+		return utils.HandleErrorResponse(c, err, &res)
+	}
+
+	res.Data = user
+	return c.Status(fiber.StatusOK).JSON(res)
 }
 
 // update a user in db
 func UpdateUser(c *fiber.Ctx) error {
-	type updateUser struct {
-		Username string `json:"username"`
+	req := new(dto.UpdateOneRequest)
+	res := baseDTO.Response[*models.User]{}
+	if err := c.BodyParser(req); err != nil {
+		err := utils.ParseError(err.Error())
+		return utils.HandleErrorResponse(c, &err, &res)
 	}
-	db := postgres.DB.Db
-	var user models.User
-	// get id params
-	id := c.Params("id")
-	// find single user in the database by id
-	result := db.Find(&user, "id = ?", id)
 
-	if result.Error != nil {
-		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "User not found", "data": nil})
+	if err := utils.HandleValidation(req); err != nil {
+		return utils.HandleErrorResponse(c, err, &res)
 	}
-	var updateUserData updateUser
-	err := c.BodyParser(&updateUserData)
+
+	user, err := service.UpdateOne(req)
+
 	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "Something's wrong with your input", "data": err})
+		return utils.HandleErrorResponse(c, err, &res)
 	}
-	user.Username = updateUserData.Username
-	// Save the Changes
-	db.Save(&user)
-	// Return the updated user
-	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "users Found", "data": user})
+	res.Data = user
+	return c.Status(fiber.StatusCreated).JSON(res)
 }
 
 // delete user in db by ID
 func DeleteUserByID(c *fiber.Ctx) error {
-	db := postgres.DB.Db
-	var user models.User
-	// get id params
-	id := c.Params("id")
-	// find single user in the database by id
-	result := db.Find(&user, "id = ?", id)
-	if result.Error != nil {
-		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "User not found", "data": nil})
+	idStr := c.Params("id")
+	res := baseDTO.Response[*models.User]{}
+
+	id, convErr := strconv.Atoi(idStr)
+	if convErr != nil {
+		err := utils.ParseError(convErr.Error())
+		return utils.HandleErrorResponse(c, &err, &res)
 	}
-	err := db.Delete(&user, "id = ?", id).Error
+	user, err := service.DeleteOne(id)
 	if err != nil {
-		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "Failed to delete user", "data": nil})
+		return utils.HandleErrorResponse(c, err, &res)
 	}
-	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "User deleted"})
+	res.Data = user
+	return c.Status(fiber.StatusOK).JSON(res)
 }

@@ -2,12 +2,14 @@ package repository
 
 import (
 	"log"
+	"time"
 
 	baseDTO "github.com/joshuaautawi/go-api/internal/common/dto"
 	"github.com/joshuaautawi/go-api/internal/common/utils"
 	"github.com/joshuaautawi/go-api/internal/user/dto"
 	"github.com/joshuaautawi/go-api/internal/user/models"
 	"github.com/joshuaautawi/go-api/pkg/db/postgres"
+	"gorm.io/gorm"
 )
 
 func GetAll(input *baseDTO.GetAllRequest) (*[]models.User, *baseDTO.Meta, *baseDTO.Error) {
@@ -36,16 +38,17 @@ func GetAll(input *baseDTO.GetAllRequest) (*[]models.User, *baseDTO.Meta, *baseD
 	return &users, &meta, nil
 }
 
-func GetOneByID(req dto.GetOneByIDRequest) (*models.User, error) {
+func GetOneByID(id int) (*models.User, *baseDTO.Error) {
 	var user models.User
-	if err := postgres.DB.Db.First(&user, "id = ?", req.ID).Error; err != nil {
-		log.Println("Error fetching user by ID:", err)
-		return nil, err
+	if fetchErr := postgres.DB.Db.First(&user, "id = ?", id).Error; fetchErr != nil {
+		log.Println("Error fetching user by ID:", fetchErr)
+		err := utils.FetchDBError(fetchErr.Error())
+		return nil, &err
 	}
 	return &user, nil
 }
 
-func Create(user *dto.CreateOne) (*models.User, *baseDTO.Error) {
+func CreateOne(user *dto.CreateOneRequest) (*models.User, *baseDTO.Error) {
 	hashedPassword, errHash := utils.HashPassword(user.Password)
 	if errHash != nil {
 		err := utils.HashError(errHash.Error())
@@ -65,4 +68,27 @@ func Create(user *dto.CreateOne) (*models.User, *baseDTO.Error) {
 		return nil, &err
 	}
 	return &newUser, nil
+}
+
+func UpdateOne(input *dto.UpdateOneRequest) (*models.User, *baseDTO.Error) {
+	db := postgres.DB.Db
+	user, err := GetOneByID(input.ID)
+	if err != nil {
+		return nil, err
+	}
+	user.Username = input.Username
+	db.Save(&user)
+	return user, nil
+}
+
+func DeleteOne(id int) (*models.User, *baseDTO.Error) {
+	db := postgres.DB.Db
+	user, err := GetOneByID(id)
+	if err != nil {
+		return nil, err
+	}
+	now := time.Now()
+	user.DeletedAt = gorm.DeletedAt{Time: now, Valid: true}
+	db.Save(&user)
+	return user, nil
 }
